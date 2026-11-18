@@ -1,0 +1,46 @@
+# One command for the whole stack:  docker compose up --build   ->  http://localhost:8030
+# All ports are bound to 127.0.0.1 on purpose: the demo API has no auth unless API_KEY is set.
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: rag
+      POSTGRES_PASSWORD: rag
+      POSTGRES_DB: rag
+    ports:
+      - "127.0.0.1:5444:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rag -d rag"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build: .
+    environment:
+      DATABASE_URL: postgresql://rag:rag@db:5432/rag
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      API_KEY: ${API_KEY:-}
+    ports:
+      - "127.0.0.1:8020:8020"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8020/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  web:
+    build: ./web
+    ports:
+      - "127.0.0.1:8030:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  pgdata:
