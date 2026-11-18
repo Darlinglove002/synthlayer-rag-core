@@ -26,7 +26,7 @@ def test_chunks_respect_max_words():
 def test_consecutive_chunks_overlap():
     chunks = chunk_text(_text(40), max_words=50, overlap_words=20)
     assert len(chunks) > 2
-    for a, b in zip(chunks, chunks[1:]):
+    for a, b in zip(chunks, chunks[1:], strict=False):
         last_sentence_of_a = split_sentences(a)[-1]
         assert last_sentence_of_a in b, "tail of a chunk must reappear at the start of the next"
 

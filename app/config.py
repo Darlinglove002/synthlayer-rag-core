@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     # Retrieval.
     candidates: int = 30  # per channel, before fusion
     rrf_k: int = 60
-    rerank_pool: int = 20  # fused candidates passed to the cross-encoder
+    rerank_pool: int = 10  # fused candidates passed to the cross-encoder (~45 ms each on CPU)
     # Cross-encoder logit below which we refuse to answer (calibrated in eval/RESULTS.md).
     min_rerank_score: float = -3.0
 

@@ -49,6 +49,9 @@ def ingest_bytes(filename: str, data: bytes, title: str | None = None) -> Ingest
             cur.executemany(
                 "INSERT INTO chunks (document_id, page, chunk_index, content, embedding) "
                 "VALUES (%s, %s, %s, %s, %s)",
-                [(doc["id"], pg, ix, txt, vec) for (pg, ix, txt), vec in zip(pieces, vectors)],
+                [
+                    (doc["id"], pg, ix, txt, vec)
+                    for (pg, ix, txt), vec in zip(pieces, vectors, strict=True)
+                ],
             )
     return IngestResult(doc["id"], title, len(pages), len(pieces))

@@ -1,0 +1,282 @@
+[
+ {
+  "id": 1,
+  "category": "semantic",
+  "question": "How much memory does the server need?",
+  "doc": "brightbay_admin_guide",
+  "page": 1
+ },
+ {
+  "id": 2,
+  "category": "semantic",
+  "question": "How long are old snapshots kept before being deleted?",
+  "doc": "brightbay_admin_guide",
+  "page": 2
+ },
+ {
+  "id": 3,
+  "category": "semantic",
+  "question": "What happens if someone enters the wrong password too many times?",
+  "doc": "brightbay_admin_guide",
+  "page": 3
+ },
+ {
+  "id": 4,
+  "category": "semantic",
+  "question": "How can my load balancer tell that the application is alive?",
+  "doc": "brightbay_admin_guide",
+  "page": 4
+ },
+ {
+  "id": 5,
+  "category": "semantic",
+  "question": "Can I go back to an older version after upgrading?",
+  "doc": "brightbay_admin_guide",
+  "page": 5
+ },
+ {
+  "id": 6,
+  "category": "semantic",
+  "question": "The product refuses to start because of an out-of-date licence. What is the cause?",
+  "doc": "brightbay_troubleshooting",
+  "page": 1
+ },
+ {
+  "id": 7,
+  "category": "semantic",
+  "question": "Why do we run out of database connections under heavy load?",
+  "doc": "brightbay_troubleshooting",
+  "page": 2
+ },
+ {
+  "id": 8,
+  "category": "semantic",
+  "question": "My customer's endpoint was down and the notifications never arrived. What happened to them?",
+  "doc": "brightbay_troubleshooting",
+  "page": 3
+ },
+ {
+  "id": 9,
+  "category": "semantic",
+  "question": "Charts take forever to load. What should I do?",
+  "doc": "brightbay_troubleshooting",
+  "page": 4
+ },
+ {
+  "id": 10,
+  "category": "semantic",
+  "question": "How fast will you reply if production is completely down?",
+  "doc": "brightbay_troubleshooting",
+  "page": 5
+ },
+ {
+  "id": 11,
+  "category": "semantic",
+  "question": "Is customer information scrambled while it sits on disk?",
+  "doc": "halden_security_overview",
+  "page": 1
+ },
+ {
+  "id": 12,
+  "category": "semantic",
+  "question": "Where are the servers for European customers located?",
+  "doc": "halden_security_overview",
+  "page": 2
+ },
+ {
+  "id": 13,
+  "category": "semantic",
+  "question": "Which independent audits has the company passed?",
+  "doc": "halden_security_overview",
+  "page": 3
+ },
+ {
+  "id": 14,
+  "category": "semantic",
+  "question": "How quickly will I be told if there is a data leak?",
+  "doc": "halden_security_overview",
+  "page": 4
+ },
+ {
+  "id": 15,
+  "category": "semantic",
+  "question": "Can staff open production systems whenever they like?",
+  "doc": "halden_security_overview",
+  "page": 5
+ },
+ {
+  "id": 16,
+  "category": "exact",
+  "question": "E-4012",
+  "doc": "brightbay_troubleshooting",
+  "page": 1
+ },
+ {
+  "id": 17,
+  "category": "exact",
+  "question": "E-5307",
+  "doc": "brightbay_troubleshooting",
+  "page": 2
+ },
+ {
+  "id": 18,
+  "category": "exact",
+  "question": "E-6120",
+  "doc": "brightbay_troubleshooting",
+  "page": 3
+ },
+ {
+  "id": 19,
+  "category": "exact",
+  "question": "brightbay-ctl restore",
+  "doc": "brightbay_admin_guide",
+  "page": 2
+ },
+ {
+  "id": 20,
+  "category": "exact",
+  "question": "auth.lockout_threshold",
+  "doc": "brightbay_admin_guide",
+  "page": 3
+ },
+ {
+  "id": 21,
+  "category": "exact",
+  "question": "db.pool_max",
+  "doc": "brightbay_troubleshooting",
+  "page": 2
+ },
+ {
+  "id": 22,
+  "category": "exact",
+  "question": "dlq.webhooks",
+  "doc": "brightbay_troubleshooting",
+  "page": 3
+ },
+ {
+  "id": 23,
+  "category": "exact",
+  "question": "port 9102",
+  "doc": "brightbay_admin_guide",
+  "page": 4
+ },
+ {
+  "id": 24,
+  "category": "exact",
+  "question": "backup.retention_days",
+  "doc": "brightbay_admin_guide",
+  "page": 2
+ },
+ {
+  "id": 25,
+  "category": "exact",
+  "question": "brightbay-ctl support-bundle",
+  "doc": "brightbay_troubleshooting",
+  "page": 5
+ },
+ {
+  "id": 26,
+  "category": "exact",
+  "question": "SCIM provisioning",
+  "doc": "brightbay_admin_guide",
+  "page": 3
+ },
+ {
+  "id": 27,
+  "category": "exact",
+  "question": "HIPAA BAA",
+  "doc": "halden_security_overview",
+  "page": 3
+ },
+ {
+  "id": 28,
+  "category": "exact",
+  "question": "brightbay-ctl upgrade --to 4.8.2",
+  "doc": "brightbay_admin_guide",
+  "page": 5
+ },
+ {
+  "id": 29,
+  "category": "exact",
+  "question": "ISO 27001",
+  "doc": "halden_security_overview",
+  "page": 3
+ },
+ {
+  "id": 30,
+  "category": "exact",
+  "question": "SOC 2 Type II",
+  "doc": "halden_security_overview",
+  "page": 3
+ },
+ {
+  "id": 31,
+  "category": "mixed",
+  "question": "What does E-5307 mean and how do I fix it?",
+  "doc": "brightbay_troubleshooting",
+  "page": 2
+ },
+ {
+  "id": 32,
+  "category": "mixed",
+  "question": "Does Brightbay support SAML single sign-on?",
+  "doc": "brightbay_admin_guide",
+  "page": 3
+ },
+ {
+  "id": 33,
+  "category": "mixed",
+  "question": "How often are encryption keys rotated in the KMS?",
+  "doc": "halden_security_overview",
+  "page": 1
+ },
+ {
+  "id": 34,
+  "category": "mixed",
+  "question": "What is the default value of backup.retention_days?",
+  "doc": "brightbay_admin_guide",
+  "page": 2
+ },
+ {
+  "id": 35,
+  "category": "mixed",
+  "question": "How many failed logins trigger auth.lockout_threshold?",
+  "doc": "brightbay_admin_guide",
+  "page": 3
+ },
+ {
+  "id": 36,
+  "category": "oos",
+  "question": "What is the price of the Enterprise plan?",
+  "doc": null,
+  "page": null
+ },
+ {
+  "id": 37,
+  "category": "oos",
+  "question": "Does Brightbay integrate with Salesforce?",
+  "doc": null,
+  "page": null
+ },
+ {
+  "id": 38,
+  "category": "oos",
+  "question": "Who is the CEO of Halden Systems?",
+  "doc": null,
+  "page": null
+ },
+ {
+  "id": 39,
+  "category": "oos",
+  "question": "What is the capital of France?",
+  "doc": null,
+  "page": null
+ },
+ {
+  "id": 40,
+  "category": "oos",
+  "question": "How do I configure push notifications in the mobile app?",
+  "doc": null,
+  "page": null
+ }
+]

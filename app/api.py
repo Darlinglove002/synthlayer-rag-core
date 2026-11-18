@@ -75,7 +75,9 @@ def upload_document(file: Annotated[UploadFile, File()]):
 @app.delete("/documents/{doc_id}", dependencies=[Auth], status_code=204)
 def delete_document(doc_id: int):
     with connection() as conn:
-        deleted = conn.execute("DELETE FROM documents WHERE id = %s RETURNING id", (doc_id,)).fetchone()
+        deleted = conn.execute(
+            "DELETE FROM documents WHERE id = %s RETURNING id", (doc_id,)
+        ).fetchone()
     if not deleted:
         raise HTTPException(404, "document not found")
 

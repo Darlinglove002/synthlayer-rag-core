@@ -102,7 +102,7 @@ def search(query: str, top_k: int = 5, mode: Mode = "hybrid_rerank") -> list[Hit
         for cid in pool
     ]
     if mode == "hybrid_rerank":
-        for hit, s in zip(hits, rerank_scores(query, [h.content for h in hits])):
+        for hit, s in zip(hits, rerank_scores(query, [h.content for h in hits]), strict=True):
             hit.rerank_score = s
             hit.score = s
         hits.sort(key=lambda h: (-h.score, h.chunk_id))
