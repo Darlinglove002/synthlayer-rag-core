@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SynthLayer RAG</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <aside>
+      <h1>Documents</h1>
+      <label class="upload">
+        <input id="file" type="file" accept=".pdf,.txt,.md" multiple hidden />
+        <span>Upload PDF / TXT / MD</span>
+      </label>
+      <p id="status" class="muted" role="status"></p>
+      <ul id="docs"></ul>
+    </aside>
+    <main>
+      <div id="log" aria-live="polite">
+        <div class="msg bot muted">
+          Upload a document, then ask a question. Answers cite the exact page they came from.
+        </div>
+      </div>
+      <form id="chat">
+        <input id="q" type="text" placeholder="Ask about your documents…" autocomplete="off" maxlength="1000" required />
+        <button type="submit">Ask</button>
+      </form>
+    </main>
+    <script type="module" src="main.js"></script>
+  </body>
+</html>

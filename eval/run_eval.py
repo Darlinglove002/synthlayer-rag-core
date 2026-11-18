@@ -169,6 +169,13 @@ def main() -> None:
     )
     close_pool()
 
+    # Regression guard for CI: the full pipeline must keep finding the gold page.
+    floor = float(os.environ.get("MIN_HIT3", "0.9"))
+    final = [r for c in CATEGORIES for r in results["hybrid_rerank"][c]]
+    got = _hit_at(final, 3)
+    if got < floor:
+        sys.exit(f"FAIL: hybrid_rerank hit@3 {got:.3f} is below the floor {floor:.2f}")
+
 
 if __name__ == "__main__":
     main()
