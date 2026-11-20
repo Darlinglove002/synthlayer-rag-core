@@ -4,25 +4,26 @@
 
 ```mermaid
 flowchart TB
-    subgraph ingest["Ingest"]
-        F["PDF / TXT / MD<br/>POST /documents"] --> C["pages, then sentence-aware chunks<br/>overlap, never across a page"]
+    subgraph ingest["Ingest · POST /documents"]
+        direction LR
+        F["PDF / TXT / MD"] --> C["pages, then sentence-aware chunks<br/>overlap, never across a page"]
         C --> E["embeddings<br/>bge-small, local ONNX"]
     end
 
-    E --> DB[("PostgreSQL 16 + pgvector<br/>content, embedding vector(384), tsv tsvector")]
+    DB[("PostgreSQL 16 + pgvector<br/>content · embedding vector(384) · tsv tsvector")]
 
-    subgraph query["Query"]
-        UI["TypeScript chat UI<br/>nginx :8030"] -- "/api" --> API["FastAPI<br/>POST /ask"]
-        API --> D["dense search<br/>HNSW, cosine"]
+    subgraph query["Query · POST /ask, from the TypeScript UI via nginx /api or curl"]
+        direction LR
+        API["FastAPI"] --> D["dense search<br/>HNSW, cosine"]
         API --> L["full-text search<br/>GIN, ts_rank_cd"]
         D --> R["RRF fusion"]
         L --> R
-        R --> X["cross-encoder rerank<br/>top 10 candidates"]
+        R --> X["cross-encoder<br/>rerank, top 10"]
         X --> A["answer with [n] page citations<br/>refuses below a calibrated score"]
     end
 
-    DB -.-> D
-    DB -.-> L
+    ingest --> DB
+    DB --> query
 ```
 
 A small, readable RAG core that keeps **everything in one PostgreSQL**: vectors (`pgvector`) and the full-text index (`tsvector`) sit in the same table, are queried together, fused, reranked, and turned into an answer that **cites the exact page**. It ships with an eval harness, a FastAPI service, and a dependency-free TypeScript chat UI, and the whole stack starts with one command.
