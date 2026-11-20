@@ -1,24 +1,32 @@
 """Lazy singletons for the local ONNX models (loaded on first use, not at import)."""
 
+import logging
 from functools import lru_cache
+from typing import Any
 
 import numpy as np
 
 from app.config import get_settings
 
+log = logging.getLogger(__name__)
+
 
 @lru_cache
-def _embedder():
+def _embedder() -> Any:
     from fastembed import TextEmbedding
 
-    return TextEmbedding(get_settings().embed_model)
+    name = get_settings().embed_model
+    log.info("loading embedding model %s", name)
+    return TextEmbedding(name)
 
 
 @lru_cache
-def _reranker():
+def _reranker() -> Any:
     from fastembed.rerank.cross_encoder import TextCrossEncoder
 
-    return TextCrossEncoder(get_settings().rerank_model)
+    name = get_settings().rerank_model
+    log.info("loading rerank model %s", name)
+    return TextCrossEncoder(name)
 
 
 def embed_documents(texts: list[str]) -> list[np.ndarray]:

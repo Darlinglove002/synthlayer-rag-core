@@ -1,4 +1,6 @@
 import hashlib
+import logging
+import time
 from dataclasses import dataclass
 
 from app.chunking import chunk_text
@@ -6,6 +8,8 @@ from app.config import get_settings
 from app.db import connection
 from app.loaders import load_pages
 from app.models import embed_documents
+
+log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -19,6 +23,7 @@ class IngestResult:
 
 def ingest_bytes(filename: str, data: bytes, title: str | None = None) -> IngestResult:
     cfg = get_settings()
+    started = time.perf_counter()
     digest = hashlib.sha256(data).hexdigest()
     title = title or filename.rsplit(".", 1)[0]
 
@@ -29,6 +34,7 @@ def ingest_bytes(filename: str, data: bytes, title: str | None = None) -> Ingest
             (filename,),
         ).fetchone()
         if row and row["sha256"] == digest:
+            log.info("ingest %r: identical file already indexed, skipped", filename)
             return IngestResult(row["id"], row["title"], row["pages"], row["n"], skipped=True)
 
     pages = load_pages(filename, data)
@@ -54,4 +60,11 @@ def ingest_bytes(filename: str, data: bytes, title: str | None = None) -> Ingest
                     for (pg, ix, txt), vec in zip(pieces, vectors, strict=True)
                 ],
             )
+    log.info(
+        "ingest %r: %d pages, %d chunks in %.1fs",
+        filename,
+        len(pages),
+        len(pieces),
+        time.perf_counter() - started,
+    )
     return IngestResult(doc["id"], title, len(pages), len(pieces))
