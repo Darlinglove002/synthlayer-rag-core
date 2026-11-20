@@ -12,12 +12,15 @@ import urllib.error
 import urllib.request
 import uuid
 from pathlib import Path
+from typing import Any
 
 BASE = (sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8030").rstrip("/")
 PDF = Path(__file__).parent.parent / "eval" / "corpus" / "brightbay_admin_guide.pdf"
 
 
-def call(method: str, path: str, body: bytes | None = None, headers: dict | None = None):
+def call(
+    method: str, path: str, body: bytes | None = None, headers: dict[str, str] | None = None
+) -> tuple[int, Any]:
     req = urllib.request.Request(
         BASE + "/api" + path, data=body, headers=headers or {}, method=method
     )
@@ -29,7 +32,7 @@ def call(method: str, path: str, body: bytes | None = None, headers: dict | None
         return e.code, None
 
 
-def upload(name: str, data: bytes):
+def upload(name: str, data: bytes) -> tuple[int, Any]:
     boundary = uuid.uuid4().hex
     body = (
         (
@@ -44,7 +47,7 @@ def upload(name: str, data: bytes):
     )
 
 
-def ask(q: str) -> dict:
+def ask(q: str) -> dict[str, Any]:
     status, out = call(
         "POST", "/ask", json.dumps({"query": q}).encode(), {"Content-Type": "application/json"}
     )

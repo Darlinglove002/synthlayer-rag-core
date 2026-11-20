@@ -51,6 +51,8 @@ def ingest_bytes(filename: str, data: bytes, title: str | None = None) -> Ingest
             "INSERT INTO documents (title, source, sha256, pages) VALUES (%s, %s, %s, %s) RETURNING id",
             (title, filename, digest, len(pages)),
         ).fetchone()
+        if doc is None:  # INSERT ... RETURNING always yields a row; this narrows the type
+            raise RuntimeError("document insert returned no row")
         with conn.cursor() as cur:
             cur.executemany(
                 "INSERT INTO chunks (document_id, page, chunk_index, content, embedding) "

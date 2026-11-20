@@ -5,6 +5,7 @@ from functools import lru_cache
 from typing import Any
 
 import numpy as np
+from numpy.typing import NDArray
 
 from app.config import get_settings
 
@@ -29,11 +30,11 @@ def _reranker() -> Any:
     return TextCrossEncoder(name)
 
 
-def embed_documents(texts: list[str]) -> list[np.ndarray]:
+def embed_documents(texts: list[str]) -> list[NDArray[np.float32]]:
     return [np.asarray(v, dtype=np.float32) for v in _embedder().passage_embed(texts)]
 
 
-def embed_query(text: str) -> np.ndarray:
+def embed_query(text: str) -> NDArray[np.float32]:
     return np.asarray(next(iter(_embedder().query_embed([text]))), dtype=np.float32)
 
 

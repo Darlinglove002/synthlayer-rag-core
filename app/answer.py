@@ -9,6 +9,7 @@ system refuses when the best reranked passage is below the calibrated relevance 
 import logging
 import re
 from dataclasses import dataclass, field
+from typing import Any
 
 from app.chunking import split_sentences
 from app.config import get_settings
@@ -92,7 +93,9 @@ def llm_answer(question: str, hits: list[Hit]) -> Answer:
         system=_SYSTEM,
         messages=[{"role": "user", "content": f"Sources:\n{sources}\n\nQuestion: {question}"}],
     )
-    text = "".join(b.text for b in msg.content if getattr(b, "type", "") == "text").strip()
+    # `content` is a union of block types; only text blocks have `.text`.
+    blocks: list[Any] = list(msg.content)
+    text = "".join(b.text for b in blocks if getattr(b, "type", "") == "text").strip()
     used = sorted({int(n) for n in re.findall(r"\[(\d+)\]", text) if 1 <= int(n) <= len(hits)})
     if text.startswith(NO_ANSWER) or not used:
         return Answer(NO_ANSWER, False, [], cfg.answer_model)
