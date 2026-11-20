@@ -46,7 +46,9 @@ curl -s -X POST http://localhost:8020/documents -F "file=@eval/corpus/brightbay_
 ```
 
 ```bash
-curl -s -X POST http://localhost:8020/ask   -H "Content-Type: application/json"   -d '{"query": "How long are old snapshots kept before being deleted?", "top_k": 2}'
+curl -s -X POST http://localhost:8020/ask \
+  -H "Content-Type: application/json" \
+  -d '{"query": "How long are old snapshots kept before being deleted?", "top_k": 2}'
 ```
 
 ```json
@@ -68,7 +70,9 @@ curl -s -X POST http://localhost:8020/ask   -H "Content-Type: application/json" 
 `score` is the cross-encoder logit; the refusal threshold (`-3.0`) is applied to the best one. A question the documents do not answer gets a refusal with no citations (`sources` still lists what was retrieved):
 
 ```bash
-curl -s -X POST http://localhost:8020/ask -H "Content-Type: application/json"   -d '{"query": "What is the capital of France?", "top_k": 2}'
+curl -s -X POST http://localhost:8020/ask \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What is the capital of France?", "top_k": 2}'
 ```
 
 ```json
