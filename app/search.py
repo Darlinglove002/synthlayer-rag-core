@@ -1,7 +1,11 @@
 """Two-channel retrieval inside one PostgreSQL, fused with RRF, then cross-encoder reranked."""
 
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Any, Literal
+
+import numpy as np
+from numpy.typing import NDArray
+from psycopg import Connection
 
 from app.config import get_settings
 from app.db import connection
@@ -22,17 +26,17 @@ class Hit:
     dense_rank: int | None = None
     lexical_rank: int | None = None
     rerank_score: float | None = None
-    extra: dict = field(default_factory=dict)
+    extra: dict[str, Any] = field(default_factory=dict)
 
 
-def dense_ids(conn, qvec, n: int) -> list[int]:
+def dense_ids(conn: Connection[Any], qvec: NDArray[np.float32], n: int) -> list[int]:
     rows = conn.execute(
         "SELECT id FROM chunks ORDER BY embedding <=> %s LIMIT %s", (qvec, n)
     ).fetchall()
     return [r["id"] for r in rows]
 
 
-def lexical_ids(conn, query: str, n: int) -> list[int]:
+def lexical_ids(conn: Connection[Any], query: str, n: int) -> list[int]:
     """Full-text channel. plainto_tsquery ANDs every term, which is far too strict for a
     natural-language question, so the query is rewritten to OR; ts_rank_cd then favours
     chunks that match many terms close together."""
@@ -58,7 +62,7 @@ def rrf(rankings: list[list[int]], k: int) -> dict[int, float]:
     return scores
 
 
-def _fetch(conn, ids: list[int]) -> dict[int, dict]:
+def _fetch(conn: Connection[Any], ids: list[int]) -> dict[int, dict[str, Any]]:
     if not ids:
         return {}
     rows = conn.execute(

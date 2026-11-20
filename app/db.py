@@ -1,5 +1,7 @@
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Any
 
 from pgvector.psycopg import register_vector
 from psycopg import Connection
@@ -12,9 +14,9 @@ _pool: ConnectionPool | None = None
 SCHEMA = Path(__file__).with_name("schema.sql")
 
 
-def _configure(conn: Connection) -> None:
+def _configure(conn: Connection[Any]) -> None:
     register_vector(conn)
-    conn.row_factory = dict_row
+    conn.row_factory = dict_row  # rows are dicts: row["id"]
 
 
 def init_schema(database_url: str | None = None) -> None:
@@ -43,6 +45,6 @@ def close_pool() -> None:
 
 
 @contextmanager
-def connection():
+def connection() -> Iterator[Connection[Any]]:
     with get_pool().connection() as conn:
         yield conn

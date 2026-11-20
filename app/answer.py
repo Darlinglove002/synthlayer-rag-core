@@ -6,12 +6,16 @@ Either way, every claim carries a [n] marker that maps to a (document, page) cit
 system refuses when the best reranked passage is below the calibrated relevance threshold.
 """
 
+import logging
 import re
 from dataclasses import dataclass, field
+from typing import Any
 
 from app.chunking import split_sentences
 from app.config import get_settings
 from app.search import Hit
+
+log = logging.getLogger(__name__)
 
 NO_ANSWER = "I couldn't find this in the indexed documents."
 _STOP = set(
@@ -89,7 +93,9 @@ def llm_answer(question: str, hits: list[Hit]) -> Answer:
         system=_SYSTEM,
         messages=[{"role": "user", "content": f"Sources:\n{sources}\n\nQuestion: {question}"}],
     )
-    text = "".join(b.text for b in msg.content if getattr(b, "type", "") == "text").strip()
+    # `content` is a union of block types; only text blocks have `.text`.
+    blocks: list[Any] = list(msg.content)
+    text = "".join(b.text for b in blocks if getattr(b, "type", "") == "text").strip()
     used = sorted({int(n) for n in re.findall(r"\[(\d+)\]", text) if 1 <= int(n) <= len(hits)})
     if text.startswith(NO_ANSWER) or not used:
         return Answer(NO_ANSWER, False, [], cfg.answer_model)
@@ -98,10 +104,13 @@ def llm_answer(question: str, hits: list[Hit]) -> Answer:
 
 def answer(question: str, hits: list[Hit]) -> Answer:
     if not is_relevant(hits):
+        log.info("refusing to answer: nothing relevant in the indexed documents")
         return Answer(NO_ANSWER, False, [], "none")
     if get_settings().anthropic_api_key:
         try:
             return llm_answer(question, hits)
-        except Exception:  # provider outage must not take the endpoint down
-            pass
+        except Exception as exc:  # provider outage must not take the endpoint down
+            log.warning(
+                "LLM answer failed (%s), falling back to the extractive answer", type(exc).__name__
+            )
     return extractive_answer(question, hits)

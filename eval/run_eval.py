@@ -19,10 +19,14 @@ import statistics
 import sys
 import time
 from pathlib import Path
+from typing import TYPE_CHECKING
 from urllib.parse import urlsplit, urlunsplit
 
+if TYPE_CHECKING:  # app modules are imported lazily in main(), after DATABASE_URL is redirected
+    from app.search import Mode
+
 HERE = Path(__file__).parent
-MODES = ("dense", "lexical", "hybrid", "hybrid_rerank")
+MODES: tuple["Mode", ...] = ("dense", "lexical", "hybrid", "hybrid_rerank")
 CATEGORIES = ("semantic", "exact", "mixed")
 KS = (1, 3, 5)
 
@@ -84,7 +88,8 @@ def main() -> None:
             hits = search(q["question"], 5, mode)
             ms = (time.perf_counter() - t0) * 1000
             if mode == "hybrid_rerank":
-                top_scores[q["id"]] = hits[0].rerank_score if hits else float("-inf")
+                top = hits[0].rerank_score if hits else None
+                top_scores[q["id"]] = float("-inf") if top is None else top
             if q["category"] == "oos":
                 continue
             rank = next(
@@ -119,9 +124,9 @@ def main() -> None:
     out("| mode | p50 ms | p95 ms |")
     out("|---|---|---|")
     for mode in MODES:
-        ms = sorted(m for c in CATEGORIES for _, m in results[mode][c])
-        p95 = ms[min(len(ms) - 1, int(0.95 * len(ms)))]
-        out(f"| {mode} | {statistics.median(ms):.1f} | {p95:.1f} |")
+        latencies = sorted(m for c in CATEGORIES for _, m in results[mode][c])
+        p95 = latencies[min(len(latencies) - 1, int(0.95 * len(latencies)))]
+        out(f"| {mode} | {statistics.median(latencies):.1f} | {p95:.1f} |")
 
     in_scores = sorted(top_scores[q["id"]] for q in scored)
     oos_scores = sorted(top_scores[q["id"]] for q in oos)
