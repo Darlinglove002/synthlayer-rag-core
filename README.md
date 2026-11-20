@@ -1,5 +1,30 @@
 # synthlayer-rag-core
 
+[![CI](https://github.com/Darlinglove002/synthlayer-rag-core/actions/workflows/ci.yml/badge.svg)](https://github.com/Darlinglove002/synthlayer-rag-core/actions/workflows/ci.yml)
+
+```mermaid
+flowchart TB
+    subgraph ingest["Ingest"]
+        F["PDF / TXT / MD<br/>POST /documents"] --> C["pages, then sentence-aware chunks<br/>overlap, never across a page"]
+        C --> E["embeddings<br/>bge-small, local ONNX"]
+    end
+
+    E --> DB[("PostgreSQL 16 + pgvector<br/>content, embedding vector(384), tsv tsvector")]
+
+    subgraph query["Query"]
+        UI["TypeScript chat UI<br/>nginx :8030"] -- "/api" --> API["FastAPI<br/>POST /ask"]
+        API --> D["dense search<br/>HNSW, cosine"]
+        API --> L["full-text search<br/>GIN, ts_rank_cd"]
+        D --> R["RRF fusion"]
+        L --> R
+        R --> X["cross-encoder rerank<br/>top 10 candidates"]
+        X --> A["answer with [n] page citations<br/>refuses below a calibrated score"]
+    end
+
+    DB -.-> D
+    DB -.-> L
+```
+
 A small, readable RAG core that keeps **everything in one PostgreSQL**: vectors (`pgvector`) and the full-text index (`tsvector`) sit in the same table, are queried together, fused, reranked, and turned into an answer that **cites the exact page**. It ships with an eval harness, a FastAPI service, and a dependency-free TypeScript chat UI, and the whole stack starts with one command.
 
 ```bash
@@ -8,15 +33,58 @@ docker compose up --build        # then open http://localhost:8030
 
 No API key needed: embeddings and the reranker are local ONNX models. Set `ANTHROPIC_API_KEY` to get LLM-written answers instead of extractive ones.
 
+## Example Request & Response
+
+Index one of the bundled PDFs, then ask a question it answers and one it does not. The output is real, from this code with no `ANTHROPIC_API_KEY` set (so the answer is extractive); scores are rounded and long texts are shortened with `…`.
+
+```bash
+curl -s -X POST http://localhost:8020/documents -F "file=@eval/corpus/brightbay_admin_guide.pdf"
 ```
- PDF / TXT / MD ──► pages ──► sentence-aware chunks (overlap, never cross a page)
-                                  │ embed (bge-small, local)
-                                  ▼
-                     PostgreSQL: chunks(content, embedding vector(384), tsv tsvector)
-                                  │
-   question ─┬─► dense: HNSW cosine ──────┐
-             └─► lexical: GIN ts_rank_cd ─┴─► RRF fusion ─► cross-encoder rerank ─► answer + [n] citations
-                                                                   (refuses below a calibrated score)
+
+```json
+{"document_id": 1, "title": "brightbay_admin_guide", "pages": 5, "chunks": 6, "skipped": false}
+```
+
+```bash
+curl -s -X POST http://localhost:8020/ask   -H "Content-Type: application/json"   -d '{"query": "How long are old snapshots kept before being deleted?", "top_k": 2}'
+```
+
+```json
+{
+  "answer": "By default old snapshots are deleted after 14 days; change this with the configuration key backup.retention_days. [1]",
+  "grounded": true,
+  "generator": "extractive",
+  "citations": [
+    {"n": 1, "document_id": 1, "title": "brightbay_admin_guide", "page": 2,
+     "snippet": "Backups. Brightbay takes a full snapshot every night at 02:30 UTC. … By default old snapshots are deleted after 14 days; …"}
+  ],
+  "sources": [
+    {"title": "brightbay_admin_guide", "page": 2, "score": 6.68, "content": "Backups. Brightbay takes a full snapshot every night at 02:30 UTC. …"},
+    {"title": "brightbay_admin_guide", "page": 5, "score": -6.88, "content": "Upgrades. Brightbay supports rolling upgrades with no downtime, …"}
+  ]
+}
+```
+
+`score` is the cross-encoder logit; the refusal threshold (`-3.0`) is applied to the best one. A question the documents do not answer gets a refusal with no citations (`sources` still lists what was retrieved):
+
+```bash
+curl -s -X POST http://localhost:8020/ask -H "Content-Type: application/json"   -d '{"query": "What is the capital of France?", "top_k": 2}'
+```
+
+```json
+{"answer": "I couldn't find this in the indexed documents.", "grounded": false, "generator": "none", "citations": [], "sources": ["…"]}
+```
+
+`GET /health` runs a real `SELECT 1` on a fresh connection. Healthy:
+
+```json
+{"status": "ok", "checks": {"postgres": "ok"}, "modes": ["dense", "lexical", "hybrid", "hybrid_rerank"], "llm": false}
+```
+
+With the database container frozen (`docker pause`), the same call returns HTTP 503 after about 4 s and recovers as soon as the container is unfrozen:
+
+```json
+{"status": "unavailable", "checks": {"postgres": "down"}, "failed": ["postgres"]}
 ```
 
 ## Why two channels
@@ -52,9 +120,11 @@ By slice, the channels are strong in different places: lexical gets 100% hit@1 o
 | `GET /documents`, `DELETE /documents/{id}` | list / remove |
 | `POST /search` `{query, mode, top_k}` | raw hits; `mode` = `dense` \| `lexical` \| `hybrid` \| `hybrid_rerank`, each hit shows its dense/lexical rank and rerank score |
 | `POST /ask` `{query, top_k}` | answer with `[n]` markers, `citations[{title,page,snippet}]`, `grounded`, and the sources used |
-| `GET /health` | liveness (always open) |
+| `GET /health` | readiness, always open: real `SELECT 1`; `200`, or `503` with `failed: ["postgres"]` |
 
 Interactive docs at `http://localhost:8020/docs`.
+
+Logs are one line per event on stderr (time, level, logger, message); `LOG_LEVEL` sets the level (default `INFO`). Uploaded file names are logged, question text never is. Every setting is listed in [`.env.example`](.env.example).
 
 ## TypeScript client and UI (`web/`)
 
@@ -75,13 +145,14 @@ The chat UI (`main.ts` + one HTML and one CSS file) is served by nginx, which al
 docker compose up -d db                       # PostgreSQL + pgvector on :5444
 py -3.12 -m venv .venv && .venv/Scripts/pip install -e ".[dev]"   # or python3 -m venv on Linux/macOS
 pytest                                        # unit + integration (real DB, real models)
+ruff check . && ruff format --check . && mypy   # lint, formatting, types (same as CI)
 python -m eval.run_eval                       # retrieval report; fails if hybrid_rerank hit@3 < 0.9
 uvicorn app.api:app --port 8020 --reload
 cd web && npm ci && npm test                  # TypeScript: tsc + node:test
 python scripts/smoke.py http://localhost:8030 # smoke test of the running stack
 ```
 
-CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs three jobs: Python (ruff, pytest, eval with a regression floor), web (tsc + tests), and **stack** (`docker compose up --wait`, then the smoke test through the nginx proxy).
+CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs three jobs: Python (ruff, mypy, pytest, eval with a regression floor), web (tsc + tests), and **stack** (`docker compose up --wait`, then the smoke test through the nginx proxy).
 
 ## Security notes
 
