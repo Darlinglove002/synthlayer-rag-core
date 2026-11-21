@@ -16,7 +16,7 @@ SCHEMA = Path(__file__).with_name("schema.sql")
 
 def _configure(conn: Connection[Any]) -> None:
     register_vector(conn)
-    conn.row_factory = dict_row  # rows are dicts: row["id"]
+    conn.row_factory = dict_row
 
 
 def init_schema(database_url: str | None = None) -> None:

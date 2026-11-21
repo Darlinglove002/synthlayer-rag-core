@@ -7,3 +7,7 @@ __pycache__/
 node_modules/
 web/dist/
 eval/out/
+
+# local AI tooling files: never part of the repository
+CLAUDE.md
+.claude/
